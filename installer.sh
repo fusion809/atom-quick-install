@@ -57,7 +57,7 @@ OS_NAME=$(osval NAME)
 printf "The name of your operating system is ${OS_NAME}..."
 OS_ARCH=$(uname -m)
 OS_VERSION=$(osval VERSION_ID)
-printf "and its version is ${OS_VERSION}. If this is incorrect please report it at https://github.com/fusion809/atom-quick-install/issues."
+printf "and its version is ${OS_VERSION}. If this is incorrect please report it at https://github.com/fusion809/atom-quick-install/issues.\n"
 
 # This version function is borrowed from @probonopd's YAML for Atom https://git.io/vX4PL
 if `which wget >/dev/null 2>&1`; then
