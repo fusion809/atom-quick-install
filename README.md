@@ -12,3 +12,6 @@ while on a system with cURL run:
 ```bash
 /bin/bash -c "$(curl -sL https://git.io/vX442)"
 ```
+
+## License
+The contents of this repository are licensed under the GNU General Public License version 3 (GPL v3), that is found in [LICENSE](https://github.com/fusion809/atom-quick-install/blob/master/LICENSE).
