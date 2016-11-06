@@ -124,3 +124,5 @@ else
   chmod +x $HOME/.local/share/applications/atom.desktop
 
 fi
+
+printf "If this script fails, please report it at https://github.com/fusion809/atom-quick-install/issues with the following information.\n OS Name: $OS_NAME.\n OS Version: $OS_VERSION.\n Architecture: $OS_ARCH.\n"
