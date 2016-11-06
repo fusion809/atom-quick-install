@@ -44,6 +44,7 @@ function download {
     wget -c "$1" -O "$2"
   else
     curl -L "$1" > "$2"
+  fi
 }
 
 OS_NAME=$(osval NAME)
