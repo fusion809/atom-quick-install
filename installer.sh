@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Added thanks to this comment http://bit.ly/2eM4c2x on FB. Ironically the commenter was against this script and he helped me make it better :)
-which --version >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` utility, so we are going to exit." && exit "1" )
+which which >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` utility, so we are going to exit." && exit "1" )
 
 function osval {
   if [ -f /etc/os-release ]; then
