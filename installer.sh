@@ -45,9 +45,18 @@ OS_VERSION=$(osval VERSION_ID)
 
 # This version function is borrowed from @probonopd's YAML for Atom https://git.io/vX4PL
 if `which wget >/dev/null 2>&1`; then
+
   ATOM_VERSION=$(wget -q "https://api.github.com/repos/atom/atom/releases/latest"  -O - | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
-else
+
+elif `which curl >/dev/null 2>&1`; then
+
   ATOM_VERSION=$(curl -sL "https://api.github.com/repos/atom/atom/releases/latest" | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
+
+else
+
+  printf "Ah, you do not seem to have wget or cURL installed. So this script will exit, please install wget or cURL before you re-run this script.\n"
+  exit "1"
+
 fi
 
 # Determine if Atom is installed and if so what version is installed
@@ -70,7 +79,7 @@ if [[ $OS_ARCH == "x86_64" ]]; then
 else
 
   printf "Ah, it seems you are not using 64-bit Linux, so this installer will exit. If this is an error please report this bug at our bug tracker: https://github.com/fusion809/atom-quick-install/issues.\n"
-  exit 1
+  exit "1"
 
 fi
 
@@ -117,7 +126,7 @@ function atomin {
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
     if `which wget >/dev/null 2>&1`; then
       wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
-    elif `which curl >/dev/null 2>&1`; then
+    else
       curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
     fi
     if [[ -f /usr/bin/apm ]]; then
