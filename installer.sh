@@ -38,12 +38,18 @@ function osval {
 OS_NAME=$(osval NAME)
 OS_ARCH=$(uname -m)
 OS_VERSION=$(osval VERSION_ID)
+
+# This version function is borrowed from @probonopd's YAML for Atom https://git.io/vX4PL
 ATOM_VERSION=$(wget -q "https://api.github.com/repos/atom/atom/releases/latest"  -O - | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
+
+# Determine if Atom is installed and if so what version is installed
 if `which atom >/dev/null 2>&1`; then
   PRESENT_VERSION=$(atom --version | grep "Atom" | sed 's|Atom\s.*:\s||g')
 elif [[ -d $HOME/.local/share/atom*64 ]]; then
   PRESENT_VERSION=$($HOME/.local/share/atom/atom --version | grep "Atom" | sed 's|Atom\s.*:\s||g')
 fi
+
+# This is the base url to the binaries of the latest Atom release.
 BASE_URL="https://github.com/atom/atom/releases/download/v$ATOM_VERSION"
 
 ## Architecture check
@@ -68,6 +74,7 @@ function atomin {
 
   elif [[ $OS_NAME == "Fedora" ]]; then
 
+    # Important to distinguish between Fedora <22 and >=22 as F22 and later use DNF instead of yum
     if [[ $OS_VERSION < "22" ]]; then
 
       printf "Using yum to install Atom $ATOM_VERSION...\n"
@@ -89,6 +96,8 @@ function atomin {
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
     wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+
+    # Hopefully the sudo apt-get -f install will install missing deps similarly to how it does on Debian systems
     sudo rpm -I /tmp/atom-${ATOM_VERSION}.x86_64.rpm || sudo apt-get -f install
 
   elif [[ -f /etc/mandriva-release ]]; then
@@ -107,6 +116,7 @@ function atomin {
     printf "Using yum to install Atom $ATOM_VERSION...\n"
     sudo yum install -y $BASE_URL/atom.x86_64.rpm
 
+  # This test for Debian-based distros is courtesy of http://unix.stackexchange.com/a/321397/27613
   elif [[ -f /etc/debian_version ]]; then
 
     printf "Downloading Atom Debian package from GitHub...\n"
