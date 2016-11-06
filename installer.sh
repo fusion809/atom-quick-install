@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Added thanks to this comment http://bit.ly/2eM4c2x on FB. Ironically the commenter was against this script and he helped me make it better :)
+which cp >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` utility, so we are going to exit." && exit "1" )
+
 function osval {
   if [[ -f /etc/os-release ]]; then
 
@@ -40,7 +44,11 @@ OS_ARCH=$(uname -m)
 OS_VERSION=$(osval VERSION_ID)
 
 # This version function is borrowed from @probonopd's YAML for Atom https://git.io/vX4PL
-ATOM_VERSION=$(wget -q "https://api.github.com/repos/atom/atom/releases/latest"  -O - | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
+if `which wget >/dev/null 2>&1`; then
+  ATOM_VERSION=$(wget -q "https://api.github.com/repos/atom/atom/releases/latest"  -O - | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
+else
+  ATOM_VERSION=$(curl -sL "https://api.github.com/repos/atom/atom/releases/latest" | grep -E "https.*atom-amd64.tar.gz" | cut -d'"' -f4 | sed 's|.*download/v||g' | sed 's|/atom-amd64.tar.gz||g')
+fi
 
 # Determine if Atom is installed and if so what version is installed
 if `which atom >/dev/null 2>&1`; then
@@ -95,7 +103,11 @@ function atomin {
   elif [[ -f /etc/pclinuxos-release ]]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
-    wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    if `which wget >/dev/null 2>&1`; then
+      wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    else
+      curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    fi
 
     # Hopefully the sudo apt-get -f install will install missing deps similarly to how it does on Debian systems
     sudo rpm -I /tmp/atom-${ATOM_VERSION}.x86_64.rpm || sudo apt-get -f install
@@ -103,7 +115,11 @@ function atomin {
   elif [[ -f /etc/mandriva-release ]]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
-    wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    if `which wget >/dev/null 2>&1`; then
+      wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    elif `which curl >/dev/null 2>&1`; then
+      curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+    fi
     if [[ -f /usr/bin/apm ]]; then
       printf "Atom conflicts with APM, a package that comes pre-installed on some Mandriva-based distributions like Mageia. To my knowledge uninstalling it causes no problems, as it is no longer really required.\n This script is going to uninstall it...\n"
       sudo urpme apm
@@ -120,14 +136,23 @@ function atomin {
   elif [[ -f /etc/debian_version ]]; then
 
     printf "Downloading Atom Debian package from GitHub...\n"
-    wget -c $BASE_URL/atom-amd64.deb -O /tmp/atom-${ATOM_VERSION}_amd64.deb
+
+    if `which wget >/dev/null 2>&1`; then
+      wget -c $BASE_URL/atom-amd64.deb -O /tmp/atom-${ATOM_VERSION}_amd64.deb
+    else
+      curl -OL $BASE_URL/atom-amd64.deb && mv atom-amd64.deb /tmp/atom-${ATOM_VERSION}_amd64.deb
+    fi
     printf "Attempting to install the Debian package with dpkg...\n"
     sudo dpkg -i /tmp/atom-${ATOM_VERSION}_amd64.deb || ( printf "Failed, probably due to unresolved dependencies... Going to attempt to solve this problem by running sudo apt-get -f install..." && sudo apt-get -f install -y )
 
   else
 
     printf "Downloading the Atom binary tarball...\n"
-    wget -c $BASE_URL/atom-amd64.tar.gz -O /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
+    if `which wget >/dev/null 2>&1`; then
+      wget -c $BASE_URL/atom-amd64.tar.gz -O /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
+    else
+      curl -L $BASE_URL/atom-amd64.tar.gz -O /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
+    fi
 
     printf "Installing Atom for $USER...\n"
     if ! [[ -d $HOME/.local/share/applications ]]; then
@@ -138,7 +163,12 @@ function atomin {
     fi
     tar -xzf /tmp/atom-${ATOM_VERSION}_amd64.tar.gz -C $HOME/.local/share
     ln -sf $HOME/.local/share/atom-${ATOM_VERSION}-amd64 $HOME/.local/share/atom
-    wget -c https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop -O $HOME/.local/share/applications/atom.desktop
+
+    if `which wget >/dev/null 2>&1`; then
+      wget -c https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop -O $HOME/.local/share/applications/atom.desktop
+    else
+      curl -OL https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop && mv atom.desktop $HOME/.local/share/applications/atom.desktop
+    fi
     chmod +x $HOME/.local/share/applications/atom.desktop
 
   fi
@@ -162,5 +192,3 @@ else
   atomin
 
 fi
-
-printf "If this script fails, please report it at https://github.com/fusion809/atom-quick-install/issues with the following information.\n OS Name: $OS_NAME.\n OS Version: $OS_VERSION.\n Architecture: $OS_ARCH.\n"
