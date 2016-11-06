@@ -39,6 +39,13 @@ function osval {
   fi
 }
 
+function download {
+  if `which wget >/dev/null 2>&1`; then
+    wget -c "$1" -O "$2"
+  else
+    curl -L "$1" > "$2"
+}
+
 OS_NAME=$(osval NAME)
 OS_ARCH=$(uname -m)
 OS_VERSION=$(osval VERSION_ID)
@@ -74,7 +81,7 @@ printf "Checking system architecture...\n"
 
 if [[ $OS_ARCH == "x86_64" ]]; then
 
-  printf "Good, you're operating on 64-bit Linux.\n\n Installation will continue as usual...\n"
+  printf "Good, you're operating on 64-bit Linux.\nInstallation will continue as per usual...\n"
 
 else
 
@@ -112,11 +119,8 @@ function atomin {
   elif [[ -f /etc/pclinuxos-release ]]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
-    if `which wget >/dev/null 2>&1`; then
-      wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
-    else
-      curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
-    fi
+
+    download $BASE_URL/atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
 
     # Hopefully the sudo apt-get -f install will install missing deps similarly to how it does on Debian systems
     sudo rpm -I /tmp/atom-${ATOM_VERSION}.x86_64.rpm || sudo apt-get -f install
@@ -124,11 +128,9 @@ function atomin {
   elif [[ -f /etc/mandriva-release ]]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
-    if `which wget >/dev/null 2>&1`; then
-      wget -c $BASE_URL/atom.x86_64.rpm -O /tmp/atom-${ATOM_VERSION}.x86_64.rpm
-    else
-      curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
-    fi
+
+    download $BASE_URL/atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
+
     if [[ -f /usr/bin/apm ]]; then
       printf "Atom conflicts with APM, a package that comes pre-installed on some Mandriva-based distributions like Mageia.\n\n Do you want to exit this installer (which might be wise on older laptops) (option A) or continue to uninstall APM and install Atom (option B)? [enter either A or B as your answer]\n"
       read proceed
@@ -151,22 +153,15 @@ function atomin {
 
     printf "Downloading Atom Debian package from GitHub...\n"
 
-    if `which wget >/dev/null 2>&1`; then
-      wget -c $BASE_URL/atom-amd64.deb -O /tmp/atom-${ATOM_VERSION}_amd64.deb
-    else
-      curl -OL $BASE_URL/atom-amd64.deb && mv atom-amd64.deb /tmp/atom-${ATOM_VERSION}_amd64.deb
-    fi
+    download $BASE_URL/atom-amd64.deb /tmp/atom-${ATOM_VERSION}_amd64.deb
+
     printf "Attempting to install the Debian package with dpkg...\n"
     sudo dpkg -i /tmp/atom-${ATOM_VERSION}_amd64.deb || ( printf "Failed, probably due to unresolved dependencies... Going to attempt to solve this problem by running sudo apt-get -f install..." && sudo apt-get -f install -y )
 
   else
 
     printf "Downloading the Atom binary tarball...\n"
-    if `which wget >/dev/null 2>&1`; then
-      wget -c $BASE_URL/atom-amd64.tar.gz -O /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
-    else
-      curl -L $BASE_URL/atom-amd64.tar.gz -O /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
-    fi
+    download $BASE_URL/atom-amd64.tar.gz /tmp/atom-${ATOM_VERSION}_amd64.tar.gz
 
     printf "Installing Atom for $USER...\n"
     if ! [[ -d $HOME/.local/share/applications ]]; then
@@ -178,11 +173,8 @@ function atomin {
     tar -xzf /tmp/atom-${ATOM_VERSION}_amd64.tar.gz -C $HOME/.local/share
     ln -sf $HOME/.local/share/atom-${ATOM_VERSION}-amd64 $HOME/.local/share/atom
 
-    if `which wget >/dev/null 2>&1`; then
-      wget -c https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop -O $HOME/.local/share/applications/atom.desktop
-    else
-      curl -OL https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop && mv atom.desktop $HOME/.local/share/applications/atom.desktop
-    fi
+    download https://github.com/fusion809/atom-quick-install/raw/master/atom.desktop $HOME/.local/share/applications/atom.desktop
+
     chmod +x $HOME/.local/share/applications/atom.desktop
 
   fi
