@@ -1,38 +1,38 @@
-#!/bin/bash
+#!/bin/sh
 
 # Added thanks to this comment http://bit.ly/2eM4c2x on FB. Ironically the commenter was against this script and he helped me make it better :)
-which cp >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` or `cp` utility, so we are going to exit." && exit "1" )
+which --version >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` utility, so we are going to exit." && exit "1" )
 
 function osval {
-  if [[ -f /etc/os-release ]]; then
+  if [ -f /etc/os-release ]; then
 
     cat /etc/os-release | grep -w "$1" | sed "s/$1=//g" | sed 's/"//g'
 
-  elif [[ -f /etc/pclinuxos-release ]]; then
+  elif [ -f /etc/pclinuxos-release ]; then
 
     cat /etc/pclinuxos-release | grep -w "$1" | sed "s/$1=//g" | sed 's/"//g'
 
-  elif [[ -f /usr/bin/emerge ]]; then
+  elif [ -f /usr/bin/emerge ]; then
 
-    if [[ -f /usr/bin/equo ]]; then
-      if [[ $1 == "NAME" ]]; then
+    if [ -f /usr/bin/equo ]; then
+      if [ $1 == "NAME" ]; then
         printf "Sabayon Linux"
-      elif [[ $1 == "VERSION_ID" ]]; then
+      elif [ $1 == "VERSION_ID" ]; then
         printf "Rolling"
       fi
     else
-      if [[ $1 == "NAME" ]]; then
+      if [ $1 == "NAME" ]; then
         printf "Gentoo Linux"
-      elif [[ $1 == "VERSION_ID" ]]; then
+      elif [ $1 == "VERSION_ID" ]; then
         printf "Rolling"
       fi
     fi
 
-  elif [[ $1 == "NAME" ]]; then
+  elif [ $1 == "NAME" ]; then
 
     lsb_release -a | grep -w "Distributor ID" | sed "s/Distributor ID:\s//g"
 
-  elif [[ $1 == "VERSION_ID" ]]; then
+  elif [ $1 == "VERSION_ID" ]; then
 
     lsb_release -a | grep -w "Release" | sed "s/Release:\s//g"
 
@@ -62,7 +62,7 @@ fi
 # Determine if Atom is installed and if so what version is installed
 if `which atom >/dev/null 2>&1`; then
   PRESENT_VERSION=$(atom --version | grep "Atom" | sed 's|Atom\s.*:\s||g')
-elif [[ -d $HOME/.local/share/atom*64 ]]; then
+elif [ -d $HOME/.local/share/atom*64 ]; then
   PRESENT_VERSION=$($HOME/.local/share/atom/atom --version | grep "Atom" | sed 's|Atom\s.*:\s||g')
 fi
 
@@ -72,7 +72,7 @@ BASE_URL="https://github.com/atom/atom/releases/download/v$ATOM_VERSION"
 ## Architecture check
 printf "Checking system architecture...\n"
 
-if [[ $OS_ARCH == "x86_64" ]]; then
+if [ $OS_ARCH == "x86_64" ]; then
 
   printf "Good, you're operating on 64-bit Linux.\n\n Installation will continue as usual...\n"
 
@@ -84,15 +84,15 @@ else
 fi
 
 function atomin {
-  if [[ $OS_NAME == "openSUSE"* ]]; then
+  if [ $OS_NAME == "openSUSE"* ]; then
 
     printf "Using zypper to install Atom $ATOM_VERSION...\n"
     sudo zypper in -y $BASE_URL/atom.x86_64.rpm
 
-  elif [[ $OS_NAME == "Fedora" ]]; then
+  elif [ $OS_NAME == "Fedora" ]; then
 
     # Important to distinguish between Fedora <22 and >=22 as F22 and later use DNF instead of yum
-    if [[ $OS_VERSION < "22" ]]; then
+    if [ $OS_VERSION < "22" ]; then
 
       printf "Using yum to install Atom $ATOM_VERSION...\n"
       sudo yum install -y $BASE_URL/atom.x86_64.rpm
@@ -104,12 +104,12 @@ function atomin {
 
     fi
 
-  elif [[ $OS_NAME == "CentOS" ]]; then
+  elif [ $OS_NAME == "CentOS" ]; then
 
     printf "Using yum to install Atom $ATOM_VERSION...\n"
     sudo yum install -y $BASE_URL/atom.x86_64.rpm
 
-  elif [[ -f /etc/pclinuxos-release ]]; then
+  elif [ -f /etc/pclinuxos-release ]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
     if `which wget >/dev/null 2>&1`; then
@@ -121,7 +121,7 @@ function atomin {
     # Hopefully the sudo apt-get -f install will install missing deps similarly to how it does on Debian systems
     sudo rpm -I /tmp/atom-${ATOM_VERSION}.x86_64.rpm || sudo apt-get -f install
 
-  elif [[ -f /etc/mandriva-release ]]; then
+  elif [ -f /etc/mandriva-release ]; then
 
     printf "Downloading Atom $ATOM_VERSION rpm...\n"
     if `which wget >/dev/null 2>&1`; then
@@ -129,20 +129,25 @@ function atomin {
     else
       curl -OL $BASE_URL/atom.x86_64.rpm && mv atom.x86_64.rpm /tmp/atom-${ATOM_VERSION}.x86_64.rpm
     fi
-    if [[ -f /usr/bin/apm ]]; then
-      printf "Atom conflicts with APM, a package that comes pre-installed on some Mandriva-based distributions like Mageia. To my knowledge uninstalling it causes no problems, as it is no longer really required.\n This script is going to uninstall it...\n"
-      sudo urpme apm
+    if [ -f /usr/bin/apm ]; then
+      printf "Atom conflicts with APM, a package that comes pre-installed on some Mandriva-based distributions like Mageia.\n\n Do you want to exit this installer (which might be wise on older laptops) (option A) or continue to uninstall APM and install Atom (option B)? [enter either A or B as your answer]\n"
+      read proceed
+      if [[ $proceed == "A" ]]; then
+        exit "1"
+      elif [[ $proceed == "B" ]]; then
+        sudo urpme apm
+      fi
     fi
     printf "Installing Atom $ATOM_VERSION...\n"
     sudo urpmi /tmp/atom-${ATOM_VERSION}.x86_64.rpm
 
-  elif [[ -f /etc/redhat-release ]]; then
+  elif [ -f /etc/redhat-release ]; then
 
     printf "Using yum to install Atom $ATOM_VERSION...\n"
     sudo yum install -y $BASE_URL/atom.x86_64.rpm
 
   # This test for Debian-based distros is courtesy of http://unix.stackexchange.com/a/321397/27613
-  elif [[ -f /etc/debian_version ]]; then
+  elif [ -f /etc/debian_version ]; then
 
     printf "Downloading Atom Debian package from GitHub...\n"
 
@@ -164,10 +169,10 @@ function atomin {
     fi
 
     printf "Installing Atom for $USER...\n"
-    if ! [[ -d $HOME/.local/share/applications ]]; then
+    if ! [ -d $HOME/.local/share/applications ]; then
       mkdir -p $HOME/.local/share/applications
     fi
-    if [[ -d $HOME/.local/share/atom-${PREVIOUS_VERSION}-amd64 ]]; then
+    if [ -d $HOME/.local/share/atom-${PREVIOUS_VERSION}-amd64 ]; then
       rm -rf $HOME/.local/share/atom-${PREVIOUS_VERSION}-amd64
     fi
     tar -xzf /tmp/atom-${ATOM_VERSION}_amd64.tar.gz -C $HOME/.local/share
@@ -184,8 +189,8 @@ function atomin {
 }
 
 ## OS check
-if [[ -n $PRESENT_VERSION ]]; then
-  if ! [[ $PRESENT_VERSION == $ATOM_VERSION ]]; then
+if [ -n $PRESENT_VERSION ]; then
+  if ! [ $PRESENT_VERSION == $ATOM_VERSION ]; then
 
     printf "Atom is already installed, but it is an old version... Going to upgrade it."
     atomin
