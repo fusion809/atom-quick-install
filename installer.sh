@@ -46,7 +46,7 @@ printf "Checking system architecture...\n"
 
 if [[ $OS_ARCH == "x86_64" ]]; then
 
-  printf "Good, you're operating on 64-bit Linux!\n"
+  printf "Good, you're operating on 64-bit Linux.\n\n Installation will continue as usual...\n"
 
 else
 
