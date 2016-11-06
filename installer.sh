@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Added thanks to this comment http://bit.ly/2eM4c2x on FB. Ironically the commenter was against this script and he helped me make it better :)
-which which >/dev/null 2>&1 || ( printf "It seems this system does not even have the basic `which` utility, so we are going to exit." && exit "1" )
+which which >/dev/null 2>&1 || ( printf 'It seems this system does not even have the basic `which` utility, so we are going to exit.' && exit "1" )
 
 function osval {
   if [[ -f /etc/os-release ]]; then
@@ -30,7 +30,12 @@ function osval {
 
   elif [[ $1 == "NAME" ]]; then
 
-    lsb_release -a | grep -w "Distributor ID" | sed "s/Distributor ID:\s//g"
+    if `lsb_release >/dev/null 2>&1`; then
+      lsb_release -a | grep -w "Distributor ID" | sed "s/Distributor ID:\s//g"
+    else
+      printf 'Ah lsb_release does not appear to be present on this system and other methods of determining the OS name and version have failed. Script will now exit.'
+      exit "1"
+    fi
 
   elif [[ $1 == "VERSION_ID" ]]; then
 
@@ -47,9 +52,12 @@ function download {
   fi
 }
 
+printf "Determining operating system...\n"
 OS_NAME=$(osval NAME)
+printf "The name of your operating system is $NAME..."
 OS_ARCH=$(uname -m)
 OS_VERSION=$(osval VERSION_ID)
+printf "and its version is $VERSION_ID. If this is incorrect please report it at https://github.com/fusion809/atom-quick-install/issues."
 
 # This version function is borrowed from @probonopd's YAML for Atom https://git.io/vX4PL
 if `which wget >/dev/null 2>&1`; then
@@ -74,7 +82,7 @@ elif [[ -d $HOME/.local/share/atom*64 ]]; then
   PRESENT_VERSION=$($HOME/.local/share/atom/atom --version | grep "Atom" | sed 's|Atom\s.*:\s||g')
 fi
 
-# This is the base url to the binaries of the latest Atom release.
+# This is the base url to the binaries of the latest stable Atom release.
 BASE_URL="https://github.com/atom/atom/releases/download/v$ATOM_VERSION"
 
 ## Architecture check
@@ -181,7 +189,7 @@ function atomin {
   fi
 }
 
-## OS check
+## Check for a previous installation of Atom.
 if [[ -n $PRESENT_VERSION ]]; then
   if ! [[ $PRESENT_VERSION == $ATOM_VERSION ]]; then
 
