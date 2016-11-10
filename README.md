@@ -4,13 +4,13 @@ This repository contains shell scripts for installing Atom on a variety of diffe
 To use it on a system with wget installed run:
 
 ```bash
-/bin/sh -c "$(wget -cqO- https://git.io/vX442)"
+/bin/bash -c "$(wget -cqO- https://git.io/vX442)"
 ```
 
 while on a system with cURL run:
 
 ```bash
-/bin/sh -c "$(curl -sL https://git.io/vX442)"
+/bin/bash -c "$(curl -sL https://git.io/vX442)"
 ```
 
 ## License
